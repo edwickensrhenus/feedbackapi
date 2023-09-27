@@ -1,4 +1,8 @@
 using FeedbackApi;
+using Microsoft.Azure.Cosmos;
+using System.Configuration;
+using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<CosmosClient>(new CosmosClient(
+    accountEndpoint: builder.Configuration.GetConnectionString("CosmosEndpoint"),
+    authKeyOrResourceToken: builder.Configuration.GetConnectionString("CosmosKey")!
+    ));
 
 var app = builder.Build();
 
@@ -35,7 +43,8 @@ app.MapGet("/weatherforecast", () =>
 
 app.MapPost("/feedback", (Feedback feedback) =>
 {
-    Console.WriteLine(feedback.Score);
+    var client= app.Services.GetService<CosmosClient>();
+    Console.WriteLine(JsonSerializer.Serialize(feedback));
 }).WithName("SendFeedback")
     .WithOpenApi();
 
