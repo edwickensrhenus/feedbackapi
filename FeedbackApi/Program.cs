@@ -29,18 +29,65 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-}).WithName("GetWeatherForecast")
+app.MapGet("/feedbackStatus", async () =>
+    {
+        // https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/quickstart-dotnet?tabs=azure-portal%2Cwindows%2Cpasswordless%2Csign-in-azure-cli#query-items
+        try
+        {
+            var client = app.Services.GetService<CosmosClient>();
+            var container = client.GetContainer("feedback", "feedback");
+
+
+
+            var count = 0;
+
+
+
+            var query = new QueryDefinition(
+                query: "SELECT * FROM feedback"
+                // query: "SELECT * FROM feedback f WHERE f.categoryId = @categoryId"
+            );
+
+
+
+            using FeedIterator<Feedback> feed = container.GetItemQueryIterator<Feedback>(
+                queryDefinition: query
+            );
+
+
+
+            while (feed.HasMoreResults)
+            {
+                FeedResponse<Feedback> response = await feed.ReadNextAsync();
+
+
+
+                foreach (var item in response)
+                {
+                    Console.WriteLine($"Found feedback. Score: {item.Score}, Details: '{item.Details ?? ""}'");
+
+
+
+                    count++;
+                }
+            }
+
+
+
+            return new { Count = count };
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Application error: {e.Message}");
+        }
+
+
+
+        return new { Count = -1 };
+
+
+
+    }).WithName("GetFeedbackStatus")
     .WithOpenApi();
 
 app.MapPost("/feedback", async (Feedback feedback) =>
