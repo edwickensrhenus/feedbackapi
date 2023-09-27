@@ -4,10 +4,7 @@ namespace FeedbackApi;
 
 public class Feedback
 {
-    public string id { get; set; } = "";
-
-    //[JsonPropertyName("id")]
-    //public string Id { get; } = Guid.NewGuid().ToString();
+    public string id { get; set; } = $"{Guid.NewGuid()}";
 
     /// <summary>
     /// Score: 1 .. 5

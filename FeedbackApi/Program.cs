@@ -19,8 +19,6 @@ builder.Services.AddSingleton<CosmosClient>(new CosmosClient(
 
 builder.Services.AddCors();
 
-
-
 var app = builder.Build();
 
 app.UseSwagger();
@@ -108,6 +106,7 @@ app.MapPost("/feedback", async (Feedback feedback) =>
     }
 
     feedback.Created = DateTime.UtcNow;
+    feedback.id = Guid.NewGuid().ToString();
 
     // TODO: use enums
     if ((feedback.Score < 1) || (feedback.Score > 5))
