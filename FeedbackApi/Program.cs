@@ -1,3 +1,5 @@
+using FeedbackApi;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -32,9 +34,14 @@ app.MapGet("/weatherforecast", () =>
         ))
         .ToArray();
     return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+}).WithName("GetWeatherForecast")
+    .WithOpenApi();
+
+app.MapPost("/feedback", (Feedback feedback) =>
+{
+    Console.WriteLine(feedback.Score);
+}).WithName("SendFeedback")
+    .WithOpenApi();
 
 app.Run();
 
