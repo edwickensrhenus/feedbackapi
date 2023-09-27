@@ -17,10 +17,20 @@ builder.Services.AddSingleton<CosmosClient>(new CosmosClient(
     clientOptions: new CosmosClientOptions(){ ConnectionMode = ConnectionMode.Gateway }
     ));
 
+builder.Services.AddCors();
+
+
+
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseCors(b => b
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+);
 
 app.UseHttpsRedirection();
 
