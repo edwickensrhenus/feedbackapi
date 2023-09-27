@@ -62,7 +62,7 @@ app.MapPost("/feedback", async (Feedback feedback) =>
     {
         var client = app.Services.GetService<CosmosClient>();
         var container = client.GetContainer("feedback", "feedback");
-        await container.CreateItemAsync(feedback);
+        await container.CreateItemAsync(feedback, new PartitionKey(feedback.Score));
     }
     catch (Exception e)
     {
