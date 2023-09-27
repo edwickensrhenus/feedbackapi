@@ -10,9 +10,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddSingleton<CosmosClient>(new CosmosClient(
     accountEndpoint: builder.Configuration.GetConnectionString("CosmosEndpoint"),
-    authKeyOrResourceToken: builder.Configuration.GetConnectionString("CosmosKey")!
+    authKeyOrResourceToken: builder.Configuration.GetConnectionString("CosmosKey")!, 
+    clientOptions: new CosmosClientOptions(){ ConnectionMode = ConnectionMode.Gateway }
     ));
 
 var app = builder.Build();
@@ -41,11 +43,43 @@ app.MapGet("/weatherforecast", () =>
 }).WithName("GetWeatherForecast")
     .WithOpenApi();
 
-app.MapPost("/feedback", (Feedback feedback) =>
+app.MapPost("/feedback", async (Feedback feedback) =>
 {
-    var client= app.Services.GetService<CosmosClient>();
+    if (feedback is null)
+    {
+        return StatusCodes.Status400BadRequest;
+    }
+
+    feedback.Created = DateTime.UtcNow;
+
+    // TODO: use enums
+    if ((feedback.Score < 1) || (feedback.Score > 5))
+    {
+        return StatusCodes.Status406NotAcceptable;
+    }
+
+    try
+    {
+        var client = app.Services.GetService<CosmosClient>();
+        var container = client.GetContainer("feedback", "feedback");
+        await container.CreateItemAsync(feedback);
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine($"Application error: {e.Message}");
+        return StatusCodes.Status500InternalServerError;
+    }
+
     Console.WriteLine(JsonSerializer.Serialize(feedback));
+
+
+
+    return StatusCodes.Status202Accepted;
 }).WithName("SendFeedback")
+    .Produces(StatusCodes.Status202Accepted)
+    .Produces(StatusCodes.Status400BadRequest)
+    .Produces(StatusCodes.Status500InternalServerError)
+    .ProducesValidationProblem(StatusCodes.Status406NotAcceptable)
     .WithOpenApi();
 
 app.Run();

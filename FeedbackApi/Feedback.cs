@@ -1,7 +1,12 @@
-﻿namespace FeedbackApi;
+﻿using System.Text.Json.Serialization;
+
+namespace FeedbackApi;
 
 public class Feedback
 {
+    [JsonPropertyName("id")]
+    public string Id { get; } = Guid.NewGuid().ToString();
+
     /// <summary>
     /// Score: 1 .. 5
     /// </summary>
@@ -16,4 +21,6 @@ public class Feedback
     /// Metadata
     /// </summary>
     public Dictionary<string, string>? Metadata { get; set; }
+
+    public DateTime Created { get; set; }
 }
