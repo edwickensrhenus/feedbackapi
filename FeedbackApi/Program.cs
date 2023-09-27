@@ -32,11 +32,6 @@ app.UseCors(b => b
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
 app.MapGet("/feedbackStatus", async () =>
     {
         // https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/quickstart-dotnet?tabs=azure-portal%2Cwindows%2Cpasswordless%2Csign-in-azure-cli#query-items
@@ -49,8 +44,6 @@ app.MapGet("/feedbackStatus", async () =>
 
             var count = 0;
 
-
-
             var query = new QueryDefinition(
                 query: "SELECT * FROM feedback"
                 // query: "SELECT * FROM feedback f WHERE f.categoryId = @categoryId"
@@ -62,25 +55,13 @@ app.MapGet("/feedbackStatus", async () =>
                 queryDefinition: query
             );
 
-
-
-            while (feed.HasMoreResults)
+            if (feed.HasMoreResults)
             {
                 FeedResponse<Feedback> response = await feed.ReadNextAsync();
 
-
-
-                foreach (var item in response)
-                {
-                    Console.WriteLine($"Found feedback. Score: {item.Score}, Details: '{item.Details ?? ""}'");
-
-
-
-                    count++;
-                }
+                count = response.Count;
+                
             }
-
-
 
             return new { Count = count };
         }
